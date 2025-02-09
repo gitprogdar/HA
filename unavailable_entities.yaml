@@ -1,0 +1,122 @@
+blueprint:
+  name: Unavailable entity detection & notification (zmodyfikowany)
+  description: >
+    Regularnie (co godzinę) sprawdza stan wszystkich encji i wykrywa te, których stan to "unavailable".
+    Dodatkowo wyklucza encje, których identyfikator zawiera słowo "update" oraz te, które ręcznie wybierzesz.
+  domain: automation
+  source_url: https://github.com/mmichon/blueprints_repo/blob/master/unavailable_entities_notification/unavailable_entities_notification.yaml
+
+  input:
+    monday_enabled:
+      name: Monday
+      description: 'Uruchom test w poniedziałek'
+      default: True
+      selector:
+        boolean:
+    tuesday_enabled:
+      name: Tuesday
+      description: 'Uruchom test we wtorek'
+      default: True
+      selector:
+        boolean:
+    wednesday_enabled:
+      name: Wednesday
+      description: 'Uruchom test w środę'
+      default: True
+      selector:
+        boolean:
+    thursday_enabled:
+      name: Thursday
+      description: 'Uruchom test w czwartek'
+      default: True
+      selector:
+        boolean:
+    friday_enabled:
+      name: Friday
+      description: 'Uruchom test w piątek'
+      default: True
+      selector:
+        boolean:
+    saturday_enabled:
+      name: Saturday
+      description: 'Uruchom test w sobotę'
+      default: True
+      selector:
+        boolean:
+    sunday_enabled:
+      name: Sunday
+      description: 'Uruchom test w niedzielę'
+      default: True
+      selector:
+        boolean:
+    exclude:
+      name: Wykluczone encje
+      description: >
+        Encje do wykluczenia z detekcji.
+        Obok tego wykluczenie automatyczne dla encji zawierających "update" w identyfikatorze.
+      default: {}
+      selector:
+        target: {}
+    actions:
+      name: Actions
+      description: >
+        Powiadomienia lub inne akcje do wykonania.
+        Zmienna {{ entities }} zostanie zastąpiona listą wykrytych encji o stanie "unavailable".
+      selector:
+        action:
+
+variables:
+  monday_enabled: !input 'monday_enabled'
+  tuesday_enabled: !input 'tuesday_enabled'
+  wednesday_enabled: !input 'wednesday_enabled'
+  thursday_enabled: !input 'thursday_enabled'
+  friday_enabled: !input 'friday_enabled'
+  saturday_enabled: !input 'saturday_enabled'
+  sunday_enabled: !input 'sunday_enabled'
+  current_day: '{{ now().weekday() | int }}'
+  exclude: !input 'exclude'
+  entities: >-
+    {% set result = namespace(entities=[]) %}
+    {% for state in states %}
+      {# Wykluczenie, jeśli w identyfikatorze znajduje się "update" #}
+      {% set excluded_update = 'update' in state.entity_id %}
+      {% if exclude.entity_id is defined %}
+        {% if state.state == 'unavailable'
+              and not state.entity_id in exclude.entity_id
+              and not excluded_update %}
+          {% set result.entities = result.entities + [state.entity_id] %}
+        {% endif %}
+      {% else %}
+        {% if state.state == 'unavailable' and not excluded_update %}
+          {% set result.entities = result.entities + [state.entity_id] %}
+        {% endif %}
+      {% endif %}
+    {% endfor %}
+    {{"⤵ \n- "}}{{ result.entities | join('\n- ') }}
+
+trigger:
+  - platform: time_pattern
+    minutes: '/60'
+
+condition:
+  - condition: template
+    value_template: >
+      {{
+        (current_day == 0 and monday_enabled) or 
+        (current_day == 1 and tuesday_enabled) or 
+        (current_day == 2 and wednesday_enabled) or
+        (current_day == 3 and thursday_enabled) or 
+        (current_day == 4 and friday_enabled) or
+        (current_day == 5 and saturday_enabled) or
+        (current_day == 6 and sunday_enabled)
+      }}
+  - condition: template
+    value_template: >
+      {{ entities != "⤵ \n-" }}
+
+action:
+  - choose: []
+    default: !input 'actions'
+
+mode: single
+max_exceeded: silent
