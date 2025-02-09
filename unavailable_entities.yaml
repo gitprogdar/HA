@@ -4,7 +4,7 @@ blueprint:
     Regularnie (co godzinę) sprawdza stan wszystkich encji i wykrywa te, których stan to "unavailable".
     Dodatkowo wyklucza encje, których identyfikator zawiera słowo "update" oraz te, które ręcznie wybierzesz.
   domain: automation
-  source_url: https://github.com/mmichon/blueprints_repo/blob/master/unavailable_entities_notification/unavailable_entities_notification.yaml
+  source_url: https://raw.githubusercontent.com/gitprogdar/HA/1e8378f291d5d92494f1112d04c9231b165b997b/unavailable_entities.yaml
 
   input:
     monday_enabled:
