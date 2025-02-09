@@ -1,5 +1,5 @@
 blueprint:
-  name: Unavailable entity detection & notification (zmodyfikowany)
+  name: Niedostępne encje
   description: >
     Regularnie (co godzinę) sprawdza stan wszystkich encji i wykrywa te, których stan to "unavailable".
     Dodatkowo wyklucza encje, których identyfikator zawiera słowo "update" oraz te, które ręcznie wybierzesz.
