@@ -96,7 +96,7 @@ variables:
 
 trigger:
   - platform: time_pattern
-    minutes: '/5'
+    hours: '/12'
 
 condition:
   - condition: template
